@@ -16,6 +16,7 @@
  */
 package org.objectweb.asm;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.objectweb.asm.tree.MethodNode;
 
 public class AsmBridge {
@@ -28,24 +29,23 @@ public class AsmBridge {
 
     public static int sizeOfMethodWriter(MethodVisitor mv) {
         MethodWriter mw = (MethodWriter) mv;
-        return mw.getSize();
+        return mw.computeMethodInfoSize();
     }
 
-    private static void removeMethodWriter(MethodWriter mw) {
+    private static void removeMethodWriter(MethodWriter mw, ClassWriter cw) {
         // mv must be the last element
-        ClassWriter cw = mw.cw;
-        MethodWriter p = cw.firstMethod;
+        MethodWriter p = getFirstMethod(cw);
         if (p == mw) {
-            cw.firstMethod = null;
-            if (cw.lastMethod == mw) {
-                cw.lastMethod = null;
+            setFirstMethod(cw, null);
+            if (getLastMethod(cw) == mw) {
+                setLastMethod(cw, null);
             }
         } else {
             while (p != null) {
                 if (p.mv == mw) {
                     p.mv = mw.mv;
-                    if (cw.lastMethod == mw) {
-                        cw.lastMethod = p;
+                    if (getLastMethod(cw) == mw) {
+                        setLastMethod(cw, p);
                     }
                     break;
                 } else {
@@ -55,10 +55,59 @@ public class AsmBridge {
         }
     }
 
+    private static MethodWriter getFirstMethod(ClassWriter cw){
+        MethodWriter mw = null;
+        try {
+            mw = (MethodWriter) FieldUtils.readField(cw, "firstMethod", true);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return mw;
+    }
+
+    private static void setFirstMethod(ClassWriter cw, Object value){
+        try {
+            FieldUtils.writeField(cw, "firstMethod", value, true);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static MethodWriter getLastMethod(ClassWriter cw){
+        MethodWriter mw = null;
+        try {
+            mw = (MethodWriter) FieldUtils.readField(cw, "lastMethod", true);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return mw;
+    }
+
+    private static void setLastMethod(ClassWriter cw, Object value){
+        try {
+            FieldUtils.writeField(cw, "lastMethod", value, true);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void replaceMethodWriter(MethodVisitor mv, MethodNode mn) {
         MethodWriter mw = (MethodWriter) mv;
-        ClassWriter cw = mw.cw;
+        ClassWriter cw = getClassWriter(mw);
         mn.accept(cw);
-        removeMethodWriter(mw);
+        removeMethodWriter(mw, cw);
+    }
+
+    private static ClassWriter getClassWriter(MethodWriter mw) {
+        ClassWriter cw = null;
+        SymbolTable symbolTable = null;
+        try {
+            symbolTable = (SymbolTable) FieldUtils.readField(mw, "symbolTable", true);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        cw = symbolTable.classWriter; // mw.cw;
+        return cw;
     }
 }
+

@@ -202,7 +202,7 @@ public class JasminDumper implements Opcodes {
             pw.print(' ');
             pw.print(fn.desc);
             if (fn.value instanceof String) {
-                StringBuffer buf = new StringBuffer();
+                StringBuilder buf = new StringBuilder();
                 Printer.appendString(buf, (String) fn.value);
                 pw.print(" = ");
                 pw.print(buf.toString());
@@ -627,7 +627,7 @@ public class JasminDumper implements Opcodes {
 
     protected void print(final Object cst) {
         if (cst instanceof String) {
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             Printer.appendString(buf, (String) cst);
             pw.print(buf.toString());
         } else if (cst instanceof Float) {
