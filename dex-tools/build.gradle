@@ -11,7 +11,7 @@ dependencies {
   compile project(':d2j-base-cmd')
 }
 
-// to build a runnable jar with dependencies. jar will be created under dex-tools/libs
+// to build a runnable jar with dependencies. jar will be created under dex-tools/build/libs
 task customFatJar(type: Jar) {
     manifest {
         attributes 'Main-Class': 'com.googlecode.dex2jar.tools.Dex2jarCmd'
